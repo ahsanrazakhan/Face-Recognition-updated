@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Results Page</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            const name = urlParams.get('name');
+            $('#user-info').html(`
+                <p>ID: ${id}</p>
+                <p>Name: ${name}</p>
+            `);
+        });
+    </script>
+</head>
+<body>
+    <h1>Authentication Successful</h1>
+    <div id="user-info"></div>
+</body>
+</html>

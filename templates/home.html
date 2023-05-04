@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+
+<style type='text/css'>
+    * {
+        padding: 0;
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+
+    body {
+        background-image: url('https://cutewallpaper.org/21/1920-x-1080-gif/1920x1080-Wallpapercartoon-Wallpapers-Driverlayer-Search-.gif');
+        background-size: cover;
+        font-family: sans-serif;
+        margin-top: 40px;
+        height: 100vh;
+        padding: 0;
+        margin: 0;
+    }
+
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+
+    table {
+        border: 1px;
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 86%;
+        margin: auto;
+    }
+
+    td,
+    th {
+        border: 1px solid black !important;
+        padding: 5px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+
+    .col {
+            flex: 0.5;
+            border-radius: 20px;
+            padding: 0px;
+            background-color: rgb(211, 211, 211, 0.5);
+            margin: auto;
+            min-height: 400px;
+            width: 50%;
+    }
+
+</style>
+
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        var checkAuth;
+
+        var studentID;
+
+        function submitStudentID() {
+            studentID = document.getElementById("student_id").value;
+            if (studentID) {
+                // Start authentication here
+                startAuthentication();
+            } else {
+                alert("Please enter a student ID.");
+            }
+        }
+
+
+        function startAuthentication() {
+            $("#video-container").html(`<img src="/start_recognition?student_id=${studentID}" width="80%">`);
+            checkAuth = setInterval(checkResults, 10000); // Check results every 10 seconds
+        }
+
+        function stopAuthentication() {
+            clearInterval(checkAuth);
+            $("#video-container").html('<button onclick="startAuthentication()" class="btn btn-primary">Start Authentication</button>');
+        }
+
+        function checkResults() {
+        $.post("/results", function(data) {
+            if(data.status === "yes") {
+                console.log("User is authenticated, stopping result check.");
+                clearInterval(checkAuth);
+                window.location.href = `/results_page?id=${data.user_info.id}&name=${data.user_info.name}`; // Redirect to the results page with query parameters
+            } else {
+                console.log("User is not authenticated.");
+                clearInterval(checkAuth);
+                if (confirm("User is not authenticated. Do you want to try again?")) {
+                    startAuthentication();
+                } else {
+                    stopAuthentication();
+                }
+            }
+        });
+    }
+
+    </script>
+</head>
+
+<body>
+    <div>
+        <label for="student_id">Enter Student ID:</label>
+        <input type="text" id="student_id" name="student_id">
+        <button onclick="submitStudentID()" class="btn btn-primary">Submit</button>
+    </div>
+
+    <div class="container">
+        <div class="col">
+            <h3 style="width: auto;margin: auto;color: white;padding: 11px;font-size: 24px;">Facial Detection Video</h3>
+            <div id="video-container">
+                <!-- The Start Authentication button is now removed because the authentication starts automatically after submitting the student ID -->
+            </div>
+            <button onclick="stopAuthentication()" class="btn btn-danger">Stop Authentication</button>
+        </div>
+    </div>
+
+    <div id="result-container"></div>
+
+</body>
+</html>
