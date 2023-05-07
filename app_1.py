@@ -226,8 +226,11 @@ def home():
 
 # ####  App Route to start revognition and accept the data for outside
 
+current_student_id = None
+
 @app.route('/start_recognition', methods=['GET', 'POST'])
 def start_recognition():
+    global current_student_id
     if request.method == 'POST':
         data = request.json
         student_id = data.get('student_id')
@@ -235,6 +238,7 @@ def start_recognition():
         student_id = request.args.get('student_id', type=int)
 
     if student_id:
+        current_student_id = student_id   # set studentID as global veriable to use in other routes
         return Response(recognize_faces(student_id), mimetype='multipart/x-mixed-replace; boundary=frame')
     else:
         return jsonify({"error": "Student ID not provided"}), 400
@@ -247,6 +251,8 @@ def start_recognition():
    # return Response(recognize_faces(student_id), mimetype='multipart/x-mixed-replace; boundary=frame')
     #recognize_faces()
     #return render_template('home.html')
+
+
 
 @app.route('/get_app_url')
 def app_url():
@@ -267,13 +273,14 @@ def results_page():
 
 @app.route('/results', methods=['POST'])
 def results():
+    global current_student_id
     with h5py.File('temp.h5', 'r') as f:
         lst = list(f['list'])
 
     status = face_check(lst)
 
     if status == 'yes':
-        id, imgStudent, studentInfo = get_student_record(9002)
+        id, imgStudent, studentInfo = get_student_record(current_student_id)
         print('Known User')
         user_info = {
             "id": id,
@@ -286,20 +293,22 @@ def results():
 
 @app.route('/status')
 def status():
+    global current_student_id
     with h5py.File('temp.h5', 'r') as f:
         lst = list(f['list'])
 
     status = face_check(lst)
 
     if status == 'yes':
-        id, imgStudent, studentInfo = get_student_record(9002)
+        id, imgStudent, studentInfo = get_student_record(current_student_id)
         #print('Known User')
         user_info = {
             "id": id,
             "name": studentInfo['name']
         }
         return jsonify(status='yes', user_info=user_info)
-
+    else:
+        return jsonify(status='Not Authenticated')
 
 #### Our main function which runs the Flask App
 if __name__ == '__main__':
