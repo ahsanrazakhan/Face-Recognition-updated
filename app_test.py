@@ -34,6 +34,9 @@ from flask import jsonify
 import urllib.request
 import ssl
 
+
+
+global face_match
 # Defining Flask App
 app = Flask(__name__)
 
@@ -143,7 +146,10 @@ def recognize_faces(student_id):
     cap = cv2.VideoCapture(0)
     #if not cap.isOpened():
     #    sys.exit('Video Source not Found')
-
+    global face_match
+    
+    #face_match.clear()
+    
     face_match = []
 
     start_time = None
@@ -211,23 +217,36 @@ def recognize_faces(student_id):
     
     cap.release()
     cv2.destroyAllWindows()
-    with h5py.File('temp.h5', 'w') as f:
-        f.create_dataset('list', data=face_match)
+    #with h5py.File('temp.h5', 'w') as f:
+    #    f.create_dataset('list', data=face_match)
     
     #return face_match
 
 def face_check(lst):
     # call the facial recognition function here to get the decision
-    
-    print(lst)
+    global face_match
 
-    ones = lst.count(1)
-    fifty_per = len(lst) * 0.5
+    print(face_match)
+
+    ones = face_match.count(1)
+    fifty_per = len(face_match) * 0.5
 
     if ones >= fifty_per:
         return "yes"
     else:
         return "no"
+
+
+
+    #print(lst)
+
+    #ones = lst.count(1)
+    #fifty_per = len(lst) * 0.5
+
+    #if ones >= fifty_per:
+    #    return "yes"
+    #else:
+    #    return "no"
 
 
 ################## ROUTING FUNCTIONS #########################
@@ -251,6 +270,7 @@ current_student_id = None
 @app.route('/start_recognition', methods=['GET', 'POST'])
 def start_recognition():
     global current_student_id
+    print('----------start recogniation-------------------')
     if request.method == 'POST':
         data = request.json
         student_id = data.get('student_id')
@@ -294,10 +314,11 @@ def results_page():
 @app.route('/results', methods=['POST'])
 def results():
     global current_student_id
-    with h5py.File('temp.h5', 'r') as f:
-        lst = list(f['list'])
+    global face_match
+    #with h5py.File('temp.h5', 'r') as f:
+    #    lst = list(f['list'])
 
-    status = face_check(lst)
+    status = face_check(face_match)
 
     if status == 'yes':
         id, imgStudent, studentInfo = get_student_record(current_student_id)
@@ -314,10 +335,11 @@ def results():
 @app.route('/status')
 def status():
     global current_student_id
-    with h5py.File('temp.h5', 'r') as f:
-        lst = list(f['list'])
+    global face_match
+    #with h5py.File('temp.h5', 'r') as f:
+    #    lst = list(f['list'])
 
-    status = face_check(lst)
+    status = face_check(face_match)
 
     if status == 'yes':
         id, imgStudent, studentInfo = get_student_record(current_student_id)
